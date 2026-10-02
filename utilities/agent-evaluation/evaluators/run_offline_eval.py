@@ -302,7 +302,12 @@ def report(run, summary, errored, item_errors, output, fail_on):
         )
         print(f"\nwrote {output}")
 
-    return compute_exit_code(summary, errored, fail_on)
+    exit_code = compute_exit_code(summary, errored, fail_on)
+    if fail_on != "none" and run.status in ("failed", "canceled"):
+        # A run that did not complete is a failure regardless of item-level
+        # scores, mirroring the live pipeline's aggregate_exit_code policy.
+        exit_code = max(exit_code, 2)
+    return exit_code
 
 
 # Public aliases for reuse by the evaluation pipeline (stable names).

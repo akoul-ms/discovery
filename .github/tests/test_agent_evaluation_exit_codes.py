@@ -253,6 +253,24 @@ class PipelineExitTests(unittest.TestCase):
         self.assertEqual(suite["captured"], 1)
         self.assertIn(self.error_message, self.console)
 
+    def offline_report_code(self, status, fail_on):
+        run = SimpleNamespace(id="run-fixture", eval_id="eval-fixture", status=status)
+        with redirect_stdout(io.StringIO()):
+            return self.offline.report(run, {}, 0, [], None, fail_on)
+
+    def test_offline_incomplete_run_fails_under_errored(self):
+        self.assertEqual(self.offline_report_code("failed", "errored"), 2)
+        self.assertEqual(self.offline_report_code("canceled", "errored"), 2)
+
+    def test_offline_incomplete_run_fails_under_failed(self):
+        self.assertEqual(self.offline_report_code("failed", "failed"), 2)
+
+    def test_offline_incomplete_run_respects_fail_on_none(self):
+        self.assertEqual(self.offline_report_code("failed", "none"), 0)
+
+    def test_offline_completed_run_passes_clean_results(self):
+        self.assertEqual(self.offline_report_code("completed", "errored"), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
